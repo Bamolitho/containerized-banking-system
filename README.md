@@ -1,3 +1,9 @@
+# Implémentation HTTP avec Sockets Python
+
+
+
+## Objectifs
+
 Application bancaire containérizé qui permet à un utilisateur de : créer, consulter ou effacer un compte, déposer ou rétirer de l'argent. 
 
 
@@ -31,4 +37,45 @@ containerized-banking-system/
 ​	├── style.js
 
 ​        └── index.html    # Page d'accueil par défaut
-   
+
+
+
+## Installation et lancement
+
+### Prérequis
+
+- Python 3.6+ (aucune dépendance externe)
+- Système d'exploitation : Windows, Linux, macOS
+
+### Installation
+
+```
+# 1. 
+```
+
+
+
+## Utilisation
+
+### 1. 
+
+```
+# 
+```
+
+
+
+**Sortie attendue :**
+
+```
+============================================================
+[INFO] 
+```
+
+### 2. 
+
+```
+
+```
+
+# Scénario de test complet
