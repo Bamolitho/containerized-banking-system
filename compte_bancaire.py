@@ -1,17 +1,5 @@
 #!/usr/bin/env python3
 
-"""
-    Application bancaire qui permet de créer ou supprimer un compte et réaliser des transactions
-
-    Paramètres clés à utiliser pour se connecter à un compte : 
-        - Un id unique de 6 chiffres (généré par le système)
-        - Et un mot de passe (choisi par l'usager)
-    
-    - Une base de données SQLite pour stocker les infos principales
-    - Utilisation de Flask, HTML / CSS / JS  pour créer une interface web
-    
-"""
-
 class CompteBancaire:
     def __init__(self):
         self.__liste_identifiants = []
