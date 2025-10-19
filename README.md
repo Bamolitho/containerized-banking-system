@@ -23,19 +23,23 @@ Application bancaire qui permet de créer ou supprimer un compte et réaliser de
 containerized-banking-system/
 ├── .gitignore
 ├── Dockerfile
-├── db.db                    # Base de données SQLite (créée automatiquement)
-│
-├── compte_bancaire.py       # Classe principale avec les fonctions creerCompte(), deposerArgent(), etc.
-│
-├── app.py                   # Application principale (API / logique métier)
 │
 ├── README.md
-├── requirements.txt          # Librairies Python nécessaires (aucune installation manuelle requise)
-│
-└── web/                      # Fichiers pour l’interface web
-    ├── style.css
-    ├── style.js
-    └── index.html            # Page d’accueil par défaut
+├── requirements.txt			# Librairies Python nécessaires (aucune installation manuelle requise)
+├── compte_bancaire.py          # Classe principale avec les fonctions creerCompte(), deposerArgent(), etc.
+├── database/
+│   ├── database.py             # Adapté avec PRAGMA foreign_keys
+│   └── db.db                   # Base de données SQLite (créée automatiquement)
+└── web/						# Fichiers pour l’interface web
+    ├── app.py                  # Application Flask avec toutes les routes
+    ├── templates/
+    │   ├── index.html          # Page d'accueil avec actions
+    │   ├── login.html
+    │   ├── register.html
+    │   ├── changer_mot_de_passe.html
+    │   └── stats.html
+    └── static/
+        └── style.css
 ```
 
 ## Installation et lancement
@@ -137,3 +141,4 @@ main()
 
 ## Références
 
+Scripts et logique web : https://github.com/Bamolitho/phishing-detection-ml/tree/main

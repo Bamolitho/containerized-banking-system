@@ -1,137 +1,148 @@
 #!/usr/bin/env python3
 
+import os
+import sys
 from datetime import datetime
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), './database')))
+from database import execute_query
+
 
 class CompteBancaire:
     def __init__(self):
-        self.__liste_identifiants = []
-        self.__transactions_record = []
         self.__solde = 0.0
-    
+
     def creerCompte(self):
         nom = input("Votre nom : ")
-
-        if len(self.__liste_identifiants) == 0:
-            id = 100000
-        else: 
-            id = 1 + self.__liste_identifiants[-1]['id']
-        
         password = input("Entrez un password : ")
 
-        new = {"nom":nom, "id":id, "password":password}
-        self.__liste_identifiants.append(new)
+        query = "INSERT INTO users (username, password) VALUES (?, ?)"
+        execute_query(query, (nom, password))
 
-        return id, password
+        # Récupération de l’ID du compte créé
+        result = execute_query("SELECT id FROM users WHERE username = ?", (nom,), fetch=True)
+        user_id = result[0]["id"]
+
+        print(f"Compte créé avec succès. Votre ID est {user_id} et votre mot de passe est {password}")
+        return user_id, password
 
     def seConnecter(self, id, password):
-        for i in range(len(self.__liste_identifiants)) :
-            if id == self.__liste_identifiants[i]['id'] and password == self.__liste_identifiants[i]["password"]:
-                return 200
-        return 404
+        query = "SELECT * FROM users WHERE id = ? AND password = ?"
+        result = execute_query(query, (id, password), fetch=True)
+        return 200 if result else 404
 
     def consulterCompte(self):
-        print(f"Solde actuel : {self.__solde}")
-    
-    def deposerArgent(self, montant) :
-        if(montant > 0.0) :
-            self.__solde += montant
-            self.__transactions_record.append(
-                f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Depot de {montant} euros => solde = {self.__solde}"
-                )
-        else :
-            print("Montant doit être positif")
-    
-    def retirerArgent(self, montant) :
-        if((self.__solde  > montant) & (montant > 0.0)):
-            self.__solde -= montant 
-            self.__transactions_record.append(
-                f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Retrait de {montant} euros => solde = {self.__solde}"
-                )
-        elif(montant <= 0.0):
-            print("Montant doit être positif")
-        else:
-            print("Insufficient funds")
-    
-    def afficher_historique(self) :
-        if self.__transactions_record :
-            print("\n====================== Historique des transactions ========================")
-            for transaction in self.__transactions_record:
-                print(f"• {transaction}")
-            print("============================================================================")
-        else:
-            print("No transactions yet")
-    
-    def effacerCompte(self, id, password):
-        for compte in self.__liste_identifiants:
-            if compte["id"] == id and compte["password"] == password:
-                confirmation = input("Confirmez la suppression (o/n) : ")
-                if confirmation.lower() == "o":
-                    self.__liste_identifiants.remove(compte)
-                    return 200
-                else:
-                    return 403
-        return 404
+        print(f"Solde actuel : {self.__solde} €")
 
-    
-    # def __str__ (self) -> str :
-    #     return f"Compte de {self.__nomProprietaire} de solde {self.__solde}"
+    def deposerArgent(self, montant, user_id):
+        if montant > 0.0:
+            self.__solde += montant
+            now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+            execute_query("""
+                INSERT INTO transactions (user_id, solde, action, montant, timestamp)
+                VALUES (?, ?, ?, ?, ?)
+            """, (user_id, self.__solde, "DEPOT", montant, now))
+
+            print(f"Dépôt de {montant} € effectué. Nouveau solde : {self.__solde} €")
+        else:
+            print("Montant invalide. Le montant doit être positif.")
+
+    def retirerArgent(self, montant, user_id):
+        if montant <= 0:
+            print("Montant invalide. Le montant doit être positif.")
+            return
+
+        if montant > self.__solde:
+            print("Fonds insuffisants.")
+            return
+
+        self.__solde -= montant
+        now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+        execute_query("""
+            INSERT INTO transactions (user_id, solde, action, montant, timestamp)
+            VALUES (?, ?, ?, ?, ?)
+        """, (user_id, self.__solde, "RETRAIT", montant, now))
+
+        print(f"Retrait de {montant} € effectué. Nouveau solde : {self.__solde} €")
+
+    def afficher_historique(self, user_id):
+        result = execute_query("SELECT * FROM transactions WHERE user_id = ?", (user_id,), fetch=True)
+
+        if not result:
+            print("Aucune transaction enregistrée.")
+            return
+
+        print("\n=== Historique des transactions ===")
+        for row in result:
+            print(f"[{row['timestamp']}] {row['action']} de {row['montant']} € — solde : {row['solde']} €")
+        print("===================================")
+
+    def effacerCompte(self, id, password):
+        result = execute_query("SELECT * FROM users WHERE id = ? AND password = ?", (id, password), fetch=True)
+        if not result:
+            return 404
+
+        confirmation = input("Confirmez la suppression du compte (o/n) : ")
+        if confirmation.lower() == "o":
+            execute_query("DELETE FROM users WHERE id = ?", (id,))
+            print("Compte supprimé avec succès.")
+            return 200
+        else:
+            print("Suppression annulée.")
+            return 403
+
 
 class MenuBancaire:
     def afficher_menu_non_utilisateur(self):
-        print("\n=== Menu ===")
+        print("\n=== MENU PRINCIPAL ===")
         print("1. Créer un compte")
         print("2. Se connecter")
         print("0. Quitter")
 
     def afficher_menu_utilisateur(self):
-        print("\n=== Menu ===")
+        print("\n=== MENU UTILISATEUR ===")
         print("1. Déposer de l'argent")
         print("2. Retirer de l'argent")
-        print("3. Consulter compte")
-        print("4. Effacer compte")
+        print("3. Consulter le compte")
+        print("4. Effacer le compte")
         print("5. Afficher l'historique des transactions")
         print("0. Se déconnecter")
 
-
-    def get_into_main_menu(self, compte):
+    def get_into_main_menu(self, compte, user_id):
         while True:
-
             self.afficher_menu_utilisateur()
             choix = input("Choisissez une option : ")
 
-            if choix == '1': # Déposer argent
-                montant = float(input("Entrez le montant a deposer : "))
-                compte.deposerArgent(montant)
+            if choix == '1':  # Dépôt
+                montant = float(input("Entrez le montant à déposer : "))
+                compte.deposerArgent(montant, user_id)
 
-            elif choix == '2': # Rétirer argent
-                montant = float(input("Entrez le montant a retirer : "))
-                compte.retirerArgent(montant)
+            elif choix == '2':  # Retrait
+                montant = float(input("Entrez le montant à retirer : "))
+                compte.retirerArgent(montant, user_id)
 
-            elif choix == '3': # Consulter compte
+            elif choix == '3':  # Consulter compte
                 compte.consulterCompte()
 
-            elif choix == '4': # Effacer compte
-                print(f"[!] Cette action est irréversible")
+            elif choix == '4':  # Effacer compte
+                print("[!] Cette action est irréversible.")
                 id = int(input("Entrez votre ID : "))
-                password = input("Entrez votre password : ")
+                password = input("Entrez votre mot de passe : ")
                 status = compte.effacerCompte(id, password)
-                if status == 200 :
-                    print(f"Compte {id} supprimé avec succès.")
+                if status == 200:
                     break
-                elif status == 403 : 
-                    print("Suppression annulée.")
-                else : 
-                    print("Identifiants incorrects. Suppression échouée.")
 
-            elif choix == '5': # Afficher historique
-                compte.afficher_historique()
+            elif choix == '5':  # Historique
+                compte.afficher_historique(user_id)
 
-            elif choix == '0': # Se déconnecter
-                print("Merci d'avoir utilisé notre service bancaire.")
+            elif choix == '0':  # Déconnexion
+                print("Déconnexion réussie.")
                 break
 
             else:
-                print("Choix invalide. Veuillez reessayer.")
+                print("Choix invalide. Réessayez.")
 
     def menu(self):
         compte = CompteBancaire()
@@ -140,26 +151,26 @@ class MenuBancaire:
             self.afficher_menu_non_utilisateur()
             choix = input("Choisissez une option : ")
 
-            if choix == '1': # Créer compte bancaire
-                id, password = compte.creerCompte()
-                print(f"Compte créé avec succès. Votre ID est {id} et password = {password}")
-                self.get_into_main_menu(compte)
+            if choix == '1':  # Créer un compte
+                user_id, password = compte.creerCompte()
+                self.get_into_main_menu(compte, user_id)
 
-            elif choix == '2': # Se connecter
-                id = int(input("Votre ID : "))
-                password = input("Votre password : ")
+            elif choix == '2':  # Se connecter
+                id = int(input("Entrez votre ID : "))
+                password = input("Entrez votre mot de passe : ")
                 status = compte.seConnecter(id, password)
-                if status == 200 :
-                    self.get_into_main_menu(compte)
-                else : 
+                if status == 200:
+                    self.get_into_main_menu(compte, id)
+                else:
                     print("Identifiants incorrects. Connexion échouée.")
 
-            elif choix == '0': # Quitter
+            elif choix == '0':
                 print("Merci d'avoir utilisé notre service bancaire.")
                 break
 
             else:
-                print("Choix invalide. Veuillez reessayer.")
+                print("Choix invalide. Réessayez.")
+
 
 if __name__ == "__main__":
     menu_bancaire = MenuBancaire()

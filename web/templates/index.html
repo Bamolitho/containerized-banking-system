@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Système Bancaire - Mon Compte</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+  <header>
+    <h1>💰 Système de Gestion Bancaire</h1>
+    <a href="{{ url_for('calculer_stats') }}">
+      <button>📊 Statistiques</button>
+    </a>
+    <a href="{{ url_for('changer_mot_de_passe') }}">
+      <button>🔒 Changer mot de passe</button>
+    </a>
+  </header>
+
+  <main>
+    <h2>Bienvenue, {{ session.username }} !</h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash-message {{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <!-- Affichage du solde -->
+    <div class="solde-display">
+      <p>Votre solde actuel</p>
+      <h2 id="soldeActuel">{{ "%.2f"|format(solde_actuel) }} €</h2>
+    </div>
+
+    <!-- Actions bancaires -->
+    <div class="actions-bancaires">
+      <!-- Carte Dépôt -->
+      <div class="action-card">
+        <h3>💵 Effectuer un dépôt</h3>
+        <form method="POST" action="{{ url_for('depot') }}">
+          <input type="number" name="montant" placeholder="Montant en €" step="0.01" min="0.01" required>
+          <button type="submit">Déposer</button>
+        </form>
+      </div>
+
+      <!-- Carte Retrait -->
+      <div class="action-card">
+        <h3>💸 Effectuer un retrait</h3>
+        <form method="POST" action="{{ url_for('retrait') }}">
+          <input type="number" name="montant" placeholder="Montant en €" step="0.01" min="0.01" required>
+          <button type="submit">Retirer</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Section de recherche et filtres -->
+    <section class="search-filter">
+      <h3>🔍 Filtrer vos transactions</h3>
+      <form id="filterForm" method="get" style="display: flex; gap: 10px; align-items: center;">
+        <input
+          type="text"
+          id="searchInput"
+          name="search"
+          placeholder="🔍 Rechercher montant, action, date..."
+          value="{{ request.args.get('search', '') }}"
+        />
+
+        <select id="filtreSelect" name="filtre">
+          <option value="">-- Filtrer par action --</option>
+          <option value="depot" {% if request.args.get('filtre') == 'depot' %}selected{% endif %}>Dépôts</option>
+          <option value="retrait" {% if request.args.get('filtre') == 'retrait' %}selected{% endif %}>Retraits</option>
+        </select>
+
+        <button type="submit">APPLIQUER</button>
+        <button type="button" id="resetBtn">RESET</button>
+      </form>
+    </section>
+
+    <!-- Section des transactions -->
+    <section class="alerts">
+      <br />
+      <h3 class="section-title blue">📋 HISTORIQUE DES TRANSACTIONS</h3>
+
+      <section class="export">
+        <a href="{{ url_for('export_csv') }}" class="btn btn-primary">
+          <button>📤 Exporter CSV</button>
+        </a>
+
+        <a href="{{ url_for('export_json') }}" class="btn btn-success">
+          <button>📤 Exporter JSON</button>
+        </a>
+      </section>
+
+      <table id="transactionsTable">
+        <thead>
+          <tr>
+            <th>Timestamp</th>
+            <th>Action</th>
+            <th>Montant (€)</th>
+            <th>Solde (€)</th>
+          </tr>
+        </thead>
+        <tbody id="transactionsBody">
+          <tr><td colspan="4" class="empty">Chargement des données...</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Zone de danger - Suppression de compte -->
+    <div class="danger-zone">
+      <h3>⚠️ Zone dangereuse</h3>
+      <p>La suppression de votre compte est <strong>irréversible</strong>. Toutes vos transactions seront perdues.</p>
+      <button class="btn-danger" onclick="showDeleteModal()">🗑️ Supprimer mon compte</button>
+    </div>
+  </main>
+
+  <footer>
+    {% if session.get('user_id') %}
+    <button class="logout-btn">
+      <a href="{{ url_for('logout') }}">Se déconnecter</a>
+    </button>
+    {% endif %}
+    <p>©️ 2025 Système de gestion bancaire</p>
+  </footer>
+
+  <!-- Modal de confirmation de suppression -->
+  <div id="confirmDeleteModal">
+    <div class="modal-content">
+      <h3>⚠️ Confirmer la suppression</h3>
+      <p>Cette action est <strong>irréversible</strong>. Veuillez entrer votre mot de passe pour confirmer.</p>
+      <form method="POST" action="{{ url_for('supprimer_compte') }}">
+        <input type="password" name="password" placeholder="Mot de passe" required>
+        <div class="modal-buttons">
+          <button type="button" onclick="hideDeleteModal()">Annuler</button>
+          <button type="submit" class="btn-danger">Confirmer la suppression</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const transactionsBody = document.getElementById('transactionsBody');
+    const searchInput = document.getElementById('searchInput');
+    const filtreSelect = document.getElementById('filtreSelect');
+    const resetBtn = document.getElementById('resetBtn');
+    const filterForm = document.getElementById('filterForm');
+    const soldeActuel = document.getElementById('soldeActuel');
+
+    function showDeleteModal() {
+      document.getElementById('confirmDeleteModal').style.display = 'block';
+    }
+
+    function hideDeleteModal() {
+      document.getElementById('confirmDeleteModal').style.display = 'none';
+    }
+
+    // Fermer le modal si on clique en dehors
+    window.onclick = function(event) {
+      const modal = document.getElementById('confirmDeleteModal');
+      if (event.target == modal) {
+        hideDeleteModal();
+      }
+    }
+
+    async function chargerTransactions() {
+      try {
+        const response = await fetch('/transactions_json');
+        if (!response.ok) throw new Error('Erreur lors du chargement des transactions');
+        const transactions = await response.json();
+
+        const search = searchInput.value.trim().toLowerCase();
+        const filtre = filtreSelect.value.toLowerCase();
+
+        const transactionsFiltrees = transactions.filter(t => {
+          const rechercheOk = !search || 
+            t.action.toLowerCase().includes(search) || 
+            t.montant.toString().includes(search) ||
+            t.timestamp.toLowerCase().includes(search);
+
+          const action = t.action ? t.action.toLowerCase() : '';
+          const filtreOk = !filtre || action === filtre;
+
+          return rechercheOk && filtreOk;
+        });
+
+        transactionsBody.innerHTML = '';
+
+        if (transactionsFiltrees.length === 0) {
+          transactionsBody.innerHTML = '<tr><td colspan="4" class="empty">Aucune transaction trouvée.</td></tr>';
+        } else {
+          // Mettre à jour le solde affiché
+          if (transactions.length > 0) {
+            soldeActuel.textContent = transactions[0].solde.toFixed(2) + ' €';
+          }
+
+          transactionsFiltrees.forEach(t => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>${t.timestamp}</td>
+              <td>${t.action}</td>
+              <td>${t.montant.toFixed(2)} €</td>
+              <td>${t.solde.toFixed(2)} €</td>
+            `;
+            transactionsBody.appendChild(tr);
+          });
+        }
+
+      } catch (error) {
+        transactionsBody.innerHTML = '<tr><td colspan="4" class="empty">Erreur lors du chargement des données.</td></tr>';
+        console.error(error);
+      }
+    }
+
+    // Chargement initial
+    chargerTransactions();
+
+    // Recharge toutes les 5 secondes
+    setInterval(chargerTransactions, 5000);
+
+    // Empêche la soumission par défaut et applique les filtres
+    filterForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      chargerTransactions();
+    });
+
+    // Réinitialisation des champs
+    resetBtn.addEventListener('click', () => {
+      searchInput.value = '';
+      filtreSelect.value = '';
+      chargerTransactions();
+    });
+  </script>
+</body>
+</html>

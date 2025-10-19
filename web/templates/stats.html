@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Statistiques - Système Bancaire</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+  <header>
+    <h1>Statistiques de votre compte</h1>
+    <a href="{{ url_for('index') }}">
+      <button>← Retour aux transactions</button>
+    </a>
+  </header>
+
+  <main>
+    <h2>Résumé de votre activité bancaire</h2>
+
+    <section class="stats">
+      <table>
+        <thead>
+          <tr>
+            <th>Indicateur</th>
+            <th>Valeur</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>💰 Solde actuel</td>
+            <td><strong>{{ stats.solde }} €</strong></td>
+          </tr>
+          <tr>
+            <td>📊 Total de transactions</td>
+            <td>{{ stats.total }}</td>
+          </tr>
+          <tr>
+            <td>⬆️ Nombre de dépôts</td>
+            <td>{{ stats.depots }}</td>
+          </tr>
+          <tr>
+            <td>⬇️ Nombre de retraits</td>
+            <td>{{ stats.retraits }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+  <footer>
+    {% if session.get('user_id') %}
+    <button class="logout-btn">
+      <a href="{{ url_for('logout') }}">Se déconnecter</a>
+    </button>
+    {% endif %}
+    <p>©️ 2025 Système de gestion bancaire</p>
+  </footer>
+</body>
+</html>
