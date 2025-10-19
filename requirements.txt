@@ -1,0 +1,12 @@
+# ==== API ====
+flask>=2.2
+
+# ==== Base de données ====
+
+# ==== Visualisation ====
+
+# ==== Traitement Excel/CSV (si besoin) ====
+openpyxl  # lecture de fichiers .xlsx
+
+# ==== Autres ====
+argparse  # utile pour les scripts CLI
