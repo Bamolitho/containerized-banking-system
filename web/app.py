@@ -346,7 +346,12 @@ def supprimer_compte():
     return redirect(url_for('register'))
 
 
+# Signaler à Docker que l'application est “vivante
+@app.route("/health")
+def health():
+    return {"status": "ok"}, 200
+
 # --- RUN ---
 if __name__ == "__main__":
     ensure_db_initialized()
-    app.run(debug=True, port=5003)
+    app.run(debug=True, host="0.0.0.0", port=6000)
