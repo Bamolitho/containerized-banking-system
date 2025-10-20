@@ -58,7 +58,7 @@ Connexion au système bancaire :
 ### 2. Captures
 
 ```shell
-ing@ing:~/Documents/projets/containerized-banking-system$ sudo docker build -t gestion_bancaire:1.0 .
+amolitho@amolitho:~/../containerized-banking-system$ sudo docker build -t gestion_bancaire:1.0 .
 [+] Building 1.6s (13/13) FINISHED                                                                                 docker:default
  => [internal] load build definition from Dockerfile                                                                         0.0s
  => => transferring dockerfile: 1.05kB                                                                                       0.0s
