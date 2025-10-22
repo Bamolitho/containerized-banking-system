@@ -266,6 +266,16 @@ c9cf0647c388: Mounted from library/python
 
 ![L'image est bien sur docker hub](./Images/image_on_docker_hub.png)
 
+# ARCHITECTURE DE DOCKER EXPLIQUÉE
+
+Ce projet illustre bien l'architecture de docker montrée par la capture suivante :
+
+![Achitecture de docker expliquée](./Images/architecture_docker.png)
+
+On utilise les commandes docker build, docker run, docker push, etc. depuis le client (docker cli) pour interagir avec le docker daemon. Ce dernier se charge de créer l'image et faire tourner le conteneur sur le host (ma machine). Le conteneur a des caractéristiques qui permettent de l'identifier : un nom (gestion_bancaire), une adresse IP (172.17.x.x), etc.
+
+Ensuite, l'image est stockée sur le web sur docker hub (registry) et peut être extraite depuis une autre machine pour utilisation. 
+
 # AVANTAGES DE DOCKER
 
 | **Élément**           | **Avec Docker**             |
