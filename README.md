@@ -32,9 +32,9 @@
 
 ### 2.2 Installation
 
-J'ai mis toutes les instructions nécessaires dans le script [run_gestion_bancaire.sh](#run_gestion_bancaire.sh). Il suffit juste de l’exécuter pour : 
+J'ai mis toutes les instructions nécessaires dans le script [run_gestion_bancaire.sh](./run_gestion_bancaire.sh) . Il suffit juste de l’exécuter pour : 
 
--  Créer l'image à partir du [Dockerfile](#./Dockerfile) si elle n'existe pas déjà,
+-  Créer l'image à partir du [Dockerfile](./Dockerfile) si elle n'existe pas déjà,
 - Créer un conteneur à partir de l'image,
 - Vérifier la santé du conteneur (healthy ou non),
 - Ouvrir le navigateur par défaut automatiquement à l'adresse http://127.0.0.1:7000/login
