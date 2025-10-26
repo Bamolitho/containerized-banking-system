@@ -6,7 +6,7 @@ containerized-banking-system/
 ├── Dockerfile
 ├── .dockerignore
 │
-├── run_gestion_bancaire.sh 	# Construit l'image Docker, lance le conteneur, et ouvre automatiquement le navigateur.			
+├── run_gestion_bancaire_docker-compose.sh 	# Construit les images Dockers, lance les conteneurs, et ouvre automatiquement le navigateur.			
 │
 ├── README.md
 ├── structure_repertoire_diagramme_classes.md
@@ -17,6 +17,7 @@ containerized-banking-system/
 │   └── db.db                   # Base de données SQLite (créée automatiquement)
 └── web/						# Fichiers pour l’interface web
     ├── app.py                  # Application Flask avec toutes les routes
+    ├── run_gestion_bancaire_docker.sh 	# Construit l'image Docker app, lance le conteneur, et ouvre automatiquement le navigateur.
     ├── templates/
     │   ├── index.html          # Page d'accueil avec actions
     │   ├── login.html
