@@ -300,7 +300,7 @@ Utiliser plusieurs conteneur, un par service :
 - ***.env*** : pour stocker les variables d'environnement (DB_HOST, DB_USER, DB_PASSWORD, SECRET_KEY, etc.),
 - ***docker-compose.yml*** : fichier de base que docker compose va chercher pour construire l'environnement.
 - ***database.py*** mis à jour
-- **init_db.sql **: pose les bases de la base de données MySQL
+- **init_db.sql**: pose les bases de la base de données MySQL
 - ***nginx/conf.d/default.conf*** : configuration du reverse proxy
 - ***Makefile*** : contient les commandes souvent executées
 
