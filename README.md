@@ -285,6 +285,40 @@ Ensuite, l'image est stockée sur le web sur docker hub (registry) et peut être
 | Déploiement           | Rapide et identique partout |
 | Reproductibilité      | Ça marche partout           |
 
+# INTÉGRATION DE DOCKER COMPOSE
+
+### **OBJECTIF**
+
+Utiliser plusieurs conteneur, un par service : 
+
+- Un pour l'application,
+- Un pour la base de données (MySQL),
+- Un pour un reverse proxy (nginx).
+
+### QUOI DE NOUVEAU (fichiers) ? 
+
+- ***.env*** : pour stocker les variables d'environnement (DB_HOST, DB_USER, DB_PASSWORD, SECRET_KEY, etc.),
+- ***docker-compose.yml*** : fichier de base que docker compose va chercher pour construire l'environnement.
+- ***database.py*** mis à jour
+- **init_db.sql **: pose les bases de la base de données MySQL
+- ***nginx/conf.d/default.conf*** : configuration du reverse proxy
+- ***Makefile*** : contient les commandes souvent executées
+
+Pour lancer le système, voici les commandes (définies dans Makefile) à exécuter : 
+
+```bash
+# 1. Construire les images
+make build
+
+# 2. Lancer les conteneurs
+make up
+```
+
+Pour accéder à l'application depuis le navigateur, il y a deux moyens : 
+
+1. http://localhost:7500 (**Recommandé**) : via Nginx, le reverse proxy
+2. http://localhost:5500 : Flask direct
+
 # RÉFÉRENCES
 
 ###### **Scripts et logique web** : https://github.com/Bamolitho/phishing-detection-ml/tree/main

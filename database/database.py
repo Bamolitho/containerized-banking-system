@@ -1,63 +1,86 @@
-import sqlite3
+# database.py
+import MySQLdb.cursors
 import os
 
-# Définir le chemin vers la base de données
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, 'db.db')
+# Cette variable sera initialisée par app.py
+mysql_instance = None
+
+def init_mysql(mysql):
+    """Initialise la connexion MySQL depuis Flask"""
+    global mysql_instance
+    mysql_instance = mysql
 
 
 # Connexion directe à la DB 
 def get_db_connection():
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
+    """Retourne la connexion MySQL depuis Flask-MySQLdb"""
+    if mysql_instance is None:
+        raise RuntimeError("MySQL n'est pas initialisé. Appelez init_mysql() depuis app.py")
+    return mysql_instance.connection
 
 
 # Création de la table des utilisateurs
 def init_db():
-    with sqlite3.connect(DB_PATH) as conn:
-        conn.execute('PRAGMA foreign_keys = ON')
-        conn.execute('''
+    try:
+        cur = mysql_instance.connection.cursor(MySQLdb.cursors.DictCursor)
+        cur.execute('''
             CREATE TABLE IF NOT EXISTS users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                username TEXT UNIQUE NOT NULL,
-                password TEXT NOT NULL
-            )
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                username VARCHAR(50) NOT NULL UNIQUE,
+                password VARCHAR(255) NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         ''')
+        mysql_instance.connection.commit()
+        cur.close()
+    except Exception as e:
+        print(f"Erreur lors de la création de la table users: {e}")
 
 
 # Création de la table transactions, liée à un utilisateur
 # action = RETRAIT OU DÉPOT
 def init_db_detection():
-    with sqlite3.connect(DB_PATH) as conn:
-        conn.execute('''
+    try:
+        cur = mysql_instance.connection.cursor(MySQLdb.cursors.DictCursor)
+        cur.execute('''
             CREATE TABLE IF NOT EXISTS transactions (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL,
-                solde REAL,
-                action TEXT,
-                montant REAL,
-                timestamp TEXT,
-                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-            )
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT NOT NULL,
+                solde DECIMAL(10,2),
+                action ENUM('RETRAIT', 'DEPOT') NOT NULL,
+                montant DECIMAL(10,2),
+                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                INDEX idx_user_id (user_id),
+                INDEX idx_timestamp (timestamp)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         ''')
+        mysql_instance.connection.commit()
+        cur.close()
+    except Exception as e:
+        print(f"Erreur lors de la création de la table transactions: {e}")
 
 
 def execute_query(query, params=(), fetch=False):
-    with sqlite3.connect(DB_PATH) as conn:
-        conn.row_factory = sqlite3.Row
-        cur = conn.cursor()
+    if mysql_instance is None:
+        return [] if fetch else None
+    
+    try:
+        cur = mysql_instance.connection.cursor(MySQLdb.cursors.DictCursor)
         cur.execute(query, params)
-        conn.commit()
+        mysql_instance.connection.commit()
         if fetch:
-            return [dict(row) for row in cur.fetchall()]
+            result = cur.fetchall()
+            cur.close()
+            return result
+        cur.close()
+    except Exception as e:
+        print(f"Erreur lors de l'exécution de la requête: {e}")
+        return [] if fetch else None
 
 
 # Initialisation automatique des tables
 def ensure_db_initialized():
-    init_db()
-    init_db_detection()
-
-
-# Appel immédiat à l'importation
-ensure_db_initialized()
+    if mysql_instance is not None:
+        init_db()
+        init_db_detection()

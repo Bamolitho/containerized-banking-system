@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 
+# compte_bancaire.py
+
 import os
 import sys
 from datetime import datetime
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), './database')))
-from database import execute_query
-
+from database.database import execute_query
 
 class CompteBancaire:
     def __init__(self):
@@ -16,18 +17,18 @@ class CompteBancaire:
         nom = input("Votre nom : ")
         password = input("Entrez un password : ")
 
-        query = "INSERT INTO users (username, password) VALUES (?, ?)"
+        query = "INSERT INTO users (username, password) VALUES (%s, %s)"
         execute_query(query, (nom, password))
 
-        # Récupération de l’ID du compte créé
-        result = execute_query("SELECT id FROM users WHERE username = ?", (nom,), fetch=True)
+        # Récupération de l'ID du compte créé
+        result = execute_query("SELECT id FROM users WHERE username = %s", (nom,), fetch=True)
         user_id = result[0]["id"]
 
         print(f"Compte créé avec succès. Votre ID est {user_id} et votre mot de passe est {password}")
         return user_id, password
 
     def seConnecter(self, id, password):
-        query = "SELECT * FROM users WHERE id = ? AND password = ?"
+        query = "SELECT * FROM users WHERE id = %s AND password = %s"
         result = execute_query(query, (id, password), fetch=True)
         return 200 if result else 404
 
@@ -41,7 +42,7 @@ class CompteBancaire:
 
             execute_query("""
                 INSERT INTO transactions (user_id, solde, action, montant, timestamp)
-                VALUES (?, ?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s, %s)
             """, (user_id, self.__solde, "DEPOT", montant, now))
 
             print(f"Dépôt de {montant} € effectué. Nouveau solde : {self.__solde} €")
@@ -62,13 +63,13 @@ class CompteBancaire:
 
         execute_query("""
             INSERT INTO transactions (user_id, solde, action, montant, timestamp)
-            VALUES (?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s)
         """, (user_id, self.__solde, "RETRAIT", montant, now))
 
         print(f"Retrait de {montant} € effectué. Nouveau solde : {self.__solde} €")
 
     def afficher_historique(self, user_id):
-        result = execute_query("SELECT * FROM transactions WHERE user_id = ?", (user_id,), fetch=True)
+        result = execute_query("SELECT * FROM transactions WHERE user_id = %s", (user_id,), fetch=True)
 
         if not result:
             print("Aucune transaction enregistrée.")
@@ -80,13 +81,13 @@ class CompteBancaire:
         print("===================================")
 
     def effacerCompte(self, id, password):
-        result = execute_query("SELECT * FROM users WHERE id = ? AND password = ?", (id, password), fetch=True)
+        result = execute_query("SELECT * FROM users WHERE id = %s AND password = %s", (id, password), fetch=True)
         if not result:
             return 404
 
         confirmation = input("Confirmez la suppression du compte (o/n) : ")
         if confirmation.lower() == "o":
-            execute_query("DELETE FROM users WHERE id = ?", (id,))
+            execute_query("DELETE FROM users WHERE id = %s", (id,))
             print("Compte supprimé avec succès.")
             return 200
         else:

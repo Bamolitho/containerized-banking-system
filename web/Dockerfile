@@ -1,6 +1,13 @@
 # FROM baseImage:tag
 FROM python:3.10-slim
 
+# Installer les dépendances système nécessaires
+RUN apt-get update && apt-get install -y \
+    gcc \
+    default-libmysqlclient-dev \
+    pkg-config \
+    && rm -rf /var/lib/apt/lists/*
+
 # Metadata
 LABEL maintainer="Amolitho"
 LABEL version="1.0"
@@ -10,7 +17,7 @@ LABEL description="Simple sytème gestion bancaire"
 ENV PORT=6000
 
 # Working directory
-WORKDIR /app
+WORKDIR /web
 
 # Installe curl avant de créer l'utilisateur non-root
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
@@ -32,12 +39,15 @@ COPY . .
 # Tells docker which port the container listens on (API port)
 EXPOSE 6000
 
+# [INFO] Variables d'environnement pour Flask
+ENV FLASK_APP=app.py
+ENV FLASK_ENV=development
+
 # Healthcheck
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:6000/health || exit 1
+  
 
 # Define what command runs when the container starts
 ENTRYPOINT [ "python" ] 
-CMD ["web/app.py"]
-
-
+CMD ["app.py"]
