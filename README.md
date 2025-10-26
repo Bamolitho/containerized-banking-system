@@ -32,7 +32,7 @@
 
 ### 2.2 Installation
 
-J'ai mis toutes les instructions nécessaires dans le script [run_gestion_bancaire.sh](./run_gestion_bancaire.sh) . Il suffit juste de l’exécuter pour : 
+J'ai mis toutes les instructions nécessaires dans le script [run_gestion_bancaire_docker.sh](./run_gestion_bancaire_docker.sh) . Il suffit juste de l’exécuter pour : 
 
 -  Créer l'image à partir du [Dockerfile](./Dockerfile) si elle n'existe pas déjà,
 - Créer un conteneur à partir de l'image,
@@ -42,10 +42,10 @@ J'ai mis toutes les instructions nécessaires dans le script [run_gestion_bancai
 Par défaut, le service est joignable via l'adresse IP locale 127.0.0.1 et sur le port 7000. L'application tourne derrière le port 6000 à l'intérieur du conteneur.
 
 ```shell
-# 1. Donner les droits d'execution au script "run_gestion_bancaire.sh"
-chmod +x run_gestion_bancaire.sh
+# 1. Donner les droits d'execution au script "run_gestion_bancaire_docker.sh"
+chmod +x run_gestion_bancaire_docker.sh
 # 2. Lancer le script
-./run_gestion_bancaire.sh
+./run_gestion_bancaire_docker.sh
 ```
 
 ## 3. Télécharger l'image sur docker hub et construire un conteneur depuis une autre machine
@@ -295,7 +295,7 @@ Utiliser plusieurs conteneur, un par service :
 - Un pour la base de données (MySQL),
 - Un pour un reverse proxy (nginx).
 
-### QUOI DE NOUVEAU (fichiers) ? 
+### **QUOI DE NOUVEAU (fichiers) ?** 
 
 - ***.env*** : pour stocker les variables d'environnement (DB_HOST, DB_USER, DB_PASSWORD, SECRET_KEY, etc.),
 - ***docker-compose.yml*** : fichier de base que docker compose va chercher pour construire l'environnement.
@@ -304,7 +304,9 @@ Utiliser plusieurs conteneur, un par service :
 - ***nginx/conf.d/default.conf*** : configuration du reverse proxy
 - ***Makefile*** : contient les commandes souvent executées
 
-Pour lancer le système, voici les commandes (définies dans Makefile) à exécuter : 
+Pour lancer le système, il y a deux moyens : 
+
+**I.** Exécuter les commandes suivantes (définies dans Makefile)  : 
 
 ```bash
 # 1. Construire les images
@@ -314,10 +316,25 @@ make build
 make up
 ```
 
-Pour accéder à l'application depuis le navigateur, il y a deux moyens : 
+Accéder à l'application depuis le navigateur : 
 
 1. http://localhost:7500 (**Recommandé**) : via Nginx, le reverse proxy
 2. http://localhost:5500 : Flask direct
+
+
+
+**II. Lancer le script run_gestion_bancaire_docker-compose.sh**
+
+```bash
+# 1. Donner les droits d'exécution
+chmod +x run_gestion_bancaire_docker-compose.sh
+
+
+# 2. Lancer le système
+./run_gestion_bancaire_docker-compose.sh
+```
+
+
 
 # RÉFÉRENCES
 
