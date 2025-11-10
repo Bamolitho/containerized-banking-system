@@ -305,6 +305,29 @@ Utiliser plusieurs conteneur, un par service :
 - ***Makefile*** : contient les commandes souvent executées
 
 Pour lancer le système, il y a deux moyens : 
+D'abord il faut définir les variables d'environnements dans le fichier .env
+Voici un exemple de contenus :
+```basic
+# -------------------
+# Configuration MySQL
+# -------------------
+DB_ROOT_PASSWORD=root1234
+MYSQL_ROOT_PASSWORD=root1234
+MYSQL_DATABASE=gestion_bancaire
+MYSQL_USER=bank_user
+MYSQL_PASSWORD=bank_pass
+
+# -------------------
+# Configuration Flask / App
+# -------------------
+FLASK_ENV=production
+DB_HOST=mysql_db
+DB_PORT=3306
+DB_NAME=bank_db
+DB_DATABASE=gestion_bancaire      
+DB_USER=bank_user
+DB_PASSWORD=bank_pass
+```
 
 **I.** Exécuter les commandes suivantes (définies dans Makefile)  : 
 
